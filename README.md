@@ -6,7 +6,6 @@ A Java project that simulates the movement of a knight on a board with obstacles
 
 ```bash
 docker build -t knight_board:latest .
-docker build -t knight_board:latest .
 ```
 
 ### 2. Run the Docker Container
