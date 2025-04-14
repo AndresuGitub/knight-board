@@ -1,92 +1,100 @@
 # Design Review – KnightPathJR
 
-## 1. Progetto e organizzazione
+## 1. Project and Structure
 
-Ho realizzato un'applicazione Java standalone eseguibile interamente tramite Docker.  
-La classe principale (`KnightPathJR`) contiene un metodo `public static void main(String[] args)` e una classe statica interna `Position` per rappresentare le coordinate del cavallo.
+I developed a standalone Java application that can be fully executed via Docker.  
+The main class (`KnightPathJR`) includes a `public static void main(String[] args)` method and a static nested class `Position` to represent the knight’s coordinates.
 
-L'obiettivo è garantire la massima portabilità ed evitare dipendenze sull’ambiente locale.
+The goal is to ensure maximum portability and avoid local environment dependencies.
 
-- Utilizzo di `Dockerfile` e `build.sh` per la compilazione automatica
-- Struttura ordinata del progetto: `src/`, `lib/`, `out/`
-- Inclusi `README.md` e `.gitignore` per documentazione e gestione Git
-
----
-
-## 2. Parsing JSON e configurazione
-
-- Uso della libreria `org.json` (via JAR) per semplicità e leggerezza
-- Le URL di board e comandi sono fornite come variabili d’ambiente
-- Parsing sicuro e logging per il tracciamento dei valori
+- Use of `Dockerfile` and `build.sh` for automated compilation
+- Clean project structure: `src/`, `lib/`, `out/`
+- Includes `README.md` and `.gitignore` for documentation and Git management
 
 ---
+## 2. JSON Parsing and Configuration
 
-## 3. Logica dei comandi
-
-### Parsing Board
-- Il JSON della board contiene un array di ostacoli
-- Gli ostacoli sono memorizzati in un `Set<Position>` per:
-  - Evitare duplicati
-  - Avere lookup `O(1)`
-  - Disinteresse per l’ordinamento
-- `Position` implementa `equals()` e `hashCode()` per funzionare correttamente nel `Set`
-
-### Parsing Comandi
-- I comandi sono letti da un `JSONArray`, trattato come lista indicizzata
-- Non ho usato `Stream` per mantenere un ciclo `for` più leggibile e controllabile
-
-### Gestione dei comandi
-- Il parsing si basa su `command.startsWith()` poiché i comandi possibili sono solo tre: `START`, `ROTATE`, `MOVE`
-- Ogni comando ha un metodo dedicato:
-  - `handleStart` → imposta la posizione iniziale e valida
-  - `handleRotate` → aggiorna la direzione
-  - `handleMove` → muove il cavallo passo-passo. E' necessario perchè la nuova posizione N passi più avanti potrebbe essere valida ma il cavallo aver superato un ostacolo. 
-    - Se incontra un ostacolo, si ferma **prima**
-    - Se esce dalla board, termina con errore
+- Used the `org.json` library (via JAR) for simplicity and lightness
+- Board and command URLs are passed as environment variables
+- Safe parsing and logging implemented to track the variables
 
 ---
+## 3. Command Logic
 
-## 4. Robustezza e logging
+### Board Parsing
+- The board JSON contains an array of obstacles
+- Obstacles are stored in a `Set<Position>` to:
+  - Avoid duplicates
+  - Enable `O(1)` lookup
+  - Handle unordered data
+- `Position` overrides `equals()` and `hashCode()` to work properly within the `Set`
 
-- Ogni passo del flusso è loggato su console: lettura URL, parsing, rotazioni, movimenti
-- I log facilitano il debug anche in ambienti runtime non interattivi (es. Docker)
+### Command Parsing
+- Commands are read from a `JSONArray`, treated as an indexed list
+- I chose not to use Streams to keep the `for` loop logic more readable and controllable
+
+### Command Handling
+- Parsing relies on `command.startsWith()` since there are only three command types: `START`, `ROTATE`, `MOVE`
+- Each command has a dedicated handler method:
+  - `handleStart` : sets and validates the starting position
+  - `handleRotate` : updates the movement direction
+  - `handleMove` : moves the knight step-by-step. This is necessary because a destination may be valid, but an obstacle could have been crossed.
+    - If an obstacle is encountered, the knight stops before it
+    - If the knight exits the board, execution stops with an error
 
 ---
+## 4. Robustness and Logging
 
-## 5. Testing – Strategia e Priorità
+- Every step is logged to the console: URL reading, parsing, rotations, movements
+- Logging is helpful even in non-interactive environments like Docker
 
-Anche se il progetto non richiede test completi, ecco come affronterei il testing in modo efficace:
+---
+## 5. Testing – Strategy and Priorities
 
-### Priorità: **logica dei comandi**
+Although full testing is not required, here is how I would approach it effectively:
+
+###  Priority: **Command Logic**
 1. `handleStart`
-   - Posizione valida: deve partire
-   - Su ostacolo o fuori board : deve restituire `INVALID_START_POSITION` e fermare l'esecuzione
+   -  Valid position : should start
+   -  On obstacle or out-of-board : return `INVALID_START_POSITION`
 
 2. `handleMove`
-   - Movimento semplice entro i limiti
-   - Movimento che supera i bordi: deve restituire `OUT_OF_THE_BOARD` e fermare l'esecuzione
-   - Movimento che incontra ostacolo : si ferma prima
- 
+   -  Valid movement within board
+   -  Movement that exits the board : `OUT_OF_THE_BOARD`
+   -  Obstacle encountered mid-move : stop before
+
 3. `handleRotate`
-   - Aggiorna la direzione correttamente
+   - Should correctly update direction
 
 ---
+###  Suggested Techniques
 
-### Tecniche consigliate
+#### 1. **Unit Tests** with JUnit
+- Isolate and test `handleStart`, `handleMove`, `Position.move()` with controlled input
 
-#### 1. **Unit test** con JUnit
-- Isolare `handleStart`, `handleMove`, `Position.move()` e testarli con input mirati
+#### 2. **Mocked JSON Input**
+- Use hardcoded JSON data to avoid real HTTP calls
 
-#### 2. **Mocking JSON input**
-- Usare JSON hardcoded nei test (senza chiamate HTTP reali)
-
-#### 3. **Test end-to-end (E2E) da Docker**
-- Verificare il risultato JSON a partire da un `docker run`
-- Controllare lo `stdout` per logging e risultato finale
+#### 3. **End-to-End (E2E) Testing via Docker**
+- Verify the final output JSON through `docker run`
+- Inspect `stdout` for result and logs
 
 ---
+###  Minimal Test Cases
 
-### Sintesi logica test 
+| Case                          | Expected Result                  |
+|-------------------------------|----------------------------------|
+| START on obstacle             | `INVALID_START_POSITION`         |
+| MOVE off the board            | `OUT_OF_THE_BOARD`               |
+| MOVE hitting obstacle         | Stops before, continues          |
+| Successful command sequence   | `status: SUCCESS`                |
+| Missing or invalid URL        | `GENERIC_ERROR`                  |
 
-> Mi concentro prima su test funzionali della logica, poi su casi limite.  
-> Evito over-testing su parsing o strutture statiche, che sono già ben definite.
+---
+###  Conclusion
+
+> I prioritize testing the core logic and edge cases,  
+> avoiding over-testing well-defined static structures or parsing.
+
+
+##### XX ## 
