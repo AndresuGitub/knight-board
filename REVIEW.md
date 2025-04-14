@@ -23,6 +23,9 @@ The goal is to ensure maximum portability and avoid local environment dependenci
 
 ### Board Parsing
 - The board JSON contains an array of obstacles
+- Every cell of the board is represented by a nested class Position which has only x,y coordinates as parameters.
+- Position also handles movement with a dedicated method which updates the coordinates after every command and a method validating the position.
+- The coordinates are centered in 0,0, (bottom left) so the position with coordinates 0,1 is corresponds to the cell where in the first column from left and the second row from bottom encounter. 
 - Obstacles are stored in a `Set<Position>` to:
   - Avoid duplicates
   - Enable `O(1)` lookup
@@ -34,13 +37,13 @@ The goal is to ensure maximum portability and avoid local environment dependenci
 - I chose not to use Streams to keep the `for` loop logic more readable and controllable
 
 ### Command Handling
-- Parsing relies on `command.startsWith()` since there are only three command types: `START`, `ROTATE`, `MOVE`
+- Parsing relies on `command.startsWith()` since there are only three command types: `START`, `ROTATE`, `MOVE`. No dedicated ENUM.
 - Each command has a dedicated handler method:
-  - `handleStart` : sets and validates the starting position
+  - `handleStart` : sets and validates the starting position. If the position is not valid execution ends with status: INVALID_START_POSITION**
   - `handleRotate` : updates the movement direction
   - `handleMove` : moves the knight step-by-step. This is necessary because a destination may be valid, but an obstacle could have been crossed.
     - If an obstacle is encountered, the knight stops before it
-    - If the knight exits the board, execution stops with an error
+    - If the knight exits the board, execution ends with status OUT_OF_THE_BOARD  
 
 ---
 ## 4. Robustness and Logging
