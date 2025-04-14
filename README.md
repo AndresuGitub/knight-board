@@ -6,14 +6,15 @@ A Java project that simulates the movement of a knight on a board with obstacles
 
 ```bash
 docker build -t knight_board:latest .
+docker build -t knight_board:latest .
 ```
 
 ### 2. Run the Docker Container
 
 ```bash
-docker run -e BOARD_API=https://storage.googleapis.com/jobrapido-backend-test/board.json \
-           -e COMMANDS_API=https://storage.googleapis.com/jobrapido-backend-test/commands.json \
-           knight_board:latest
+docker run -e BOARD_API=https://storage.googleapis.com/jobrapido-backend-test/board.json -e COMMANDS_API=https://storage.googleapis.com/jobrapido-backend-test/commands.json knight_board:latest
+
+
 ```
 
 ### Expected Output
