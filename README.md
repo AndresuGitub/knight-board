@@ -10,11 +10,10 @@ docker build -t knight_board:latest .
 ```
 
 ### 2. Run the Docker Container
+Copy command from gitHub, it should be pasted in a single line on the terminal (Docker Terminal e.g.)
 
 ```bash
 docker run -e BOARD_API=https://storage.googleapis.com/jobrapido-backend-test/board.json -e COMMANDS_API=https://storage.googleapis.com/jobrapido-backend-test/commands.json knight_board:latest
-
-
 ```
 
 ### Expected Output
