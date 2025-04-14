@@ -50,7 +50,7 @@ docker run -e BOARD_API=https://storage.googleapis.com/jobrapido-backend-test/bo
 
 ---
 
-## ℹ️ Notes
+## Notes
 
 - The project uses [`json-20210307`](https://repo1.maven.org/maven2/org/json/json/20210307/json-20210307.jar).
 - Place the JAR inside the `lib/` folder manually if not included.
