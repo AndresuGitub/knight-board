@@ -31,8 +31,7 @@ public class KnightPathJR {
 
         @Override
         public boolean equals(Object o) {
-            if (!(o instanceof Position)) return false;
-            Position p = (Position) o;
+            if (!(o instanceof Position p)) return false;
             return this.x == p.x && this.y == p.y;
         }
 
@@ -59,20 +58,20 @@ public class KnightPathJR {
 
             JSONObject board = fetchJson(boardUrl);
             JSONObject commandsObj = fetchJson(commandsUrl);
-            JSONArray commands = commandsObj.getJSONArray("commands");
+            JSONArray commandsArray = commandsObj.getJSONArray("commands");
+            JSONArray obstaclesArray = commandsObj.getJSONArray("obstacles");
 
             width = board.getInt("width");
             height = board.getInt("height");
 
-            IntStream.range(0, board.getJSONArray("obstacles").length())
-                .mapToObj(i -> board.getJSONArray("obstacles").getJSONObject(i))
+            IntStream.range(0, obstaclesArray.length())
+                .mapToObj(obstaclesArray::getJSONObject)
                 .map(ob -> new Position(ob.getInt("x"), ob.getInt("y")))
                 .forEach(obstacles::add);
 
-            for (int i = 0; i < commands.length(); i++) {
-                String command = commands.getString(i);
+            for (int i = 0; i < commandsArray.length(); i++) {
+                String command = obstaclesArray.getString(i);
                 System.out.println("COMMAND: " + command);
-
                 if (command.startsWith("START")) {
                     if (!handleStart(command)) return;
                 } else if (command.startsWith("ROTATE")) {
